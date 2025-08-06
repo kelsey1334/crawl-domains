@@ -1,12 +1,12 @@
-import time, os
+import asyncio, os
 from datetime import datetime
 from ed_scraper import fetch_domains
 from telegram_bot import bot_send
 from storage import load_sent, save_sent
 
-INTERVAL = int(os.getenv("CHECK_INTERVAL", 1800))  # default 30 phút
+INTERVAL = int(os.getenv("CHECK_INTERVAL", 1800))
 
-def main():
+async def main():
     sent = load_sent()
     while True:
         try:
@@ -15,18 +15,16 @@ def main():
             new_domains = [d for d in domains if d not in sent]
 
             if new_domains:
-                bot_send(f"🔔 [{now}] Tìm được {len(new_domains)} domain mới:")
+                await bot_send(f"🔔 [{now}] Tìm được {len(new_domains)} domain mới:")
                 for d in new_domains:
-                    bot_send(f"✅ {d}")
+                    await bot_send(f"✅ {d}")
                     sent.add(d)
                 save_sent(sent)
             else:
-                bot_send(f"📘 [{now}] Không có domain mới. Bot vẫn chạy.")
-
+                await bot_send(f"📘 [{now}] Không có domain mới. Bot vẫn chạy.")
         except Exception as e:
-            bot_send(f"❌ Lỗi khi quét domain: {e}")
-
-        time.sleep(INTERVAL)
+            await bot_send(f"❌ Lỗi khi quét domain: {e}")
+        await asyncio.sleep(INTERVAL)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
